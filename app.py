@@ -7,8 +7,8 @@ from typing import Any
 
 import gradio as gr
 
-from newsintel.pipeline import run_intelligence
 from newsintel.discovery import NewsSearch, topic_trends
+from newsintel.pipeline import run_intelligence
 from newsintel.rss import canonicalize_url, load_sources
 from newsintel.storage import load_cache, save_cache
 
@@ -94,10 +94,10 @@ def refresh_news() -> tuple[list[dict[str, Any]], str, str, str]:
         if cached:
             return cached, render_cards(cached), "No live feed returned items. Showing the last saved cache. " + "; ".join(errors), render_trends(cached)
         return [], render_cards([]), "No feed items were returned. " + "; ".join(errors), render_trends([])
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - the UI converts pipeline failures into a visible status and cached fallback.
         try:
             cached = load_cache(CACHE_PATH)
-        except Exception:
+        except (OSError, ValueError, TypeError, AttributeError):
             cached = []
         if cached:
             return cached, render_cards(cached), f"Refresh failed ({type(exc).__name__}). Showing local cache.", render_trends(cached)
@@ -106,7 +106,7 @@ def refresh_news() -> tuple[list[dict[str, Any]], str, str, str]:
 
 def apply_filters(articles: list[dict[str, Any]], topic: str, mood: str,
                   query: str, ethiopia_only: bool, search_mode: str = "Contains") -> tuple[str, str]:
-    similarity = search_mode == "Similarity (TF-IDF)" and bool(query.strip())
+    similarity = search_mode == "Similarity-ranked" and bool(query.strip())
     filtered = [a for a in articles if _matches(a, topic, mood, "" if similarity else query, ethiopia_only)]
     if similarity:
         ranked = SEARCH.rank(query, filtered, limit=60)
@@ -144,7 +144,7 @@ with gr.Blocks(title="AI News Intelligence", theme=gr.themes.Soft(), css=CSS) as
         topic_filter = gr.Dropdown(["All topics", "politics", "business", "technology", "health", "climate", "science", "sports", "conflict", "world", "general"], value="All topics", label="Topic")
         sentiment_filter = gr.Dropdown(["All sentiment", "Positive", "Neutral", "Negative", "Unsupported"], value="All sentiment", label="Sentiment")
         search_box = gr.Textbox(label="Search stories", placeholder="Headline, source, entity, or snippet")
-        search_mode = gr.Dropdown(["Contains", "Similarity (TF-IDF)"], value="Contains", label="Search mode")
+        search_mode = gr.Dropdown(["Contains", "Similarity-ranked"], value="Contains", label="Search mode")
         ethiopia_filter = gr.Checkbox(label="Ethiopia-focused sources", value=False)
     topic_pulse = gr.Markdown(render_trends([]))
     stories = gr.HTML(render_cards([]))

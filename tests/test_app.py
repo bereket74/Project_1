@@ -1,4 +1,5 @@
-from app import _matches, render_cards
+import app
+from app import _matches, apply_filters, render_cards
 
 
 def test_render_cards_escapes_feed_content_and_rejects_unsafe_links():
@@ -29,3 +30,15 @@ def test_story_filters_cover_topic_sentiment_query_and_region():
     assert _matches(story, "climate", "Negative", "drought", False)
     non_ethiopia = {**story, "region": "global"}
     assert not _matches(non_ethiopia, "climate", "Negative", "drought", True)
+
+
+def test_similarity_mode_ranks_relevant_stories(monkeypatch):
+    monkeypatch.setattr(app.SEARCH, "model_name", "")
+    articles = [
+        {"id": "1", "title": "Ethiopia drought and climate update", "summary": "Dry conditions continue", "brief_summary": "Dry conditions continue", "source": "A", "topic": "climate", "sentiment": "neutral", "region": "ethiopia", "entities": [], "url": "https://example.test/1"},
+        {"id": "2", "title": "Football final ends in a draw", "summary": "The teams split points", "brief_summary": "The teams split points", "source": "B", "topic": "sports", "sentiment": "neutral", "region": "global", "entities": [], "url": "https://example.test/2"},
+    ]
+    markup, status = apply_filters(articles, "All topics", "All sentiment", "climate drought", False, "Similarity-ranked")
+    assert "Ethiopia drought and climate update" in markup
+    assert "Football final" not in markup
+    assert "TF-IDF lexical similarity" in status

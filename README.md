@@ -30,7 +30,7 @@ News readers often have to scan several sources to notice recurring coverage and
 - Related-story groups using TF-IDF word/bigram cosine similarity.
 - Gradio filters for topic, sentiment, exact-text search, and Ethiopia-focused sources; source attribution and original-story links.
 - Similarity-ranked search using TF-IDF by default, with optional multilingual sentence embeddings.
-- A descriptive week-over-week topic pulse based on feed publication timestamps; it is not a forecast.
+- A descriptive topic pulse comparing currently returned feed items across adjacent seven-day windows; source feed histories are incomplete, so it is not comprehensive coverage or a forecast.
 - Local JSON cache, CLI JSON/CSV export, and offline unit tests.
 
 ## Quick start
@@ -79,9 +79,11 @@ If that model is absent, the app returns capitalization-based *candidate* names 
 
 ## Analysis and evaluation
 
-This first version prioritizes honest, reproducible baselines over unsupported benchmark claims. Topic labeling uses keyword rules; sentiment uses VADER's English lexicon; related-story clustering uses lexical TF-IDF. Search can use TF-IDF by default or optional dense sentence embeddings when configured. These methods can miss context, irony, uncommon topics, and paraphrases. Headlines and short feed descriptions are particularly weak evidence for sentiment or entities. Trend counts compare two adjacent windows and are not predictive.
+This first version prioritizes honest, reproducible baselines over unsupported benchmark claims. Topic labeling uses keyword rules; sentiment uses VADER's English lexicon; related-story clustering uses lexical TF-IDF. Search can use TF-IDF by default or optional dense sentence embeddings when configured. These methods can miss context, irony, uncommon topics, and paraphrases. Headlines and short feed descriptions are particularly weak evidence for sentiment or entities. Trend counts compare adjacent windows only within the currently returned, incomplete feed sample; they are neither comprehensive nor predictive.
 
 No labeled evaluation corpus is included, so there are **no precision/recall/F1 or clustering-quality claims**. The tests cover data normalization, unsafe URLs, supported/unsupported-language behavior, output fields, grouping on a synthetic unit-test fixture, and cache schema behavior. The fixture is synthetic test data, not a news dataset. See [`docs/architecture.md`](docs/architecture.md) and [`docs/sources.md`](docs/sources.md).
+
+The verified test count, live-feed smoke check, and local dashboard check are recorded in [`docs/evaluation.md`](docs/evaluation.md); live counts are point-in-time operational evidence, not model benchmarks.
 
 ## Data rights and responsible use
 

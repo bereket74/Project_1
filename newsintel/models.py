@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any
 
 
@@ -34,7 +34,7 @@ class FeedSource:
     attribution: str = ""
 
     @classmethod
-    def from_dict(cls, raw: dict[str, Any]) -> "FeedSource":
+    def from_dict(cls, raw: dict[str, Any]) -> FeedSource:
         return cls(
             name=str(raw["name"]),
             url=str(raw["url"]),

@@ -3,7 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from newsintel.analysis import analyze_articles, classify_topic, cluster_stories, make_brief, sentiment
+from newsintel.analysis import (
+    analyze_articles,
+    classify_topic,
+    cluster_stories,
+    make_brief,
+    sentiment,
+)
 from newsintel.models import FeedSource
 from newsintel.rss import canonicalize_url, clean_feed_text, parse_feed_content
 from newsintel.storage import load_cache, save_cache

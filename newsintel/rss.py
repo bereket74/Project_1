@@ -34,7 +34,7 @@ def clean_feed_text(value: str) -> str:
         parser.feed(value or "")
         parser.close()
         text = " ".join(parser.parts)
-    except Exception:
+    except Exception:  # noqa: BLE001 - malformed publisher HTML should fall back to plain text instead of dropping the feed item.
         text = re.sub(r"<[^>]+>", " ", value or "")
     return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
@@ -96,7 +96,7 @@ def parse_feed_content(source: FeedSource, content: bytes, limit: int = 100) -> 
 def load_sources(path: str | Path) -> list[FeedSource]:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(raw, list):
-        raise ValueError("Feed configuration must be a JSON list")
+        raise TypeError("Feed configuration must be a JSON list")
     sources = [FeedSource.from_dict(row) for row in raw]
     if not sources:
         raise ValueError("At least one feed source is required")
