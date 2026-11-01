@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from newsintel.discovery import NewsSearch, topic_trends
+from newsintel.discovery import NewsSearch, rank_with_embedding_model, topic_trends
 
 
 def test_tfidf_similarity_ranks_relevant_story_and_reports_backend():
@@ -40,3 +40,29 @@ def test_similarity_search_handles_empty_query_and_articles():
     search = NewsSearch(model_name="")
     assert search.rank("", [{"title": "headline"}]) == []
     assert search.rank("headline", []) == []
+
+
+def test_embedding_ranker_uses_e5_prefixes_and_ranks_relevant_document():
+    class FakeModel:
+        def __init__(self):
+            self.inputs = []
+
+        def encode(self, texts, **kwargs):
+            self.inputs.append((list(texts), kwargs))
+            if texts[0].startswith("query:"):
+                return [[1.0, 0.0]]
+            return [[1.0, 0.0] if "climate" in text.lower() else [0.0, 1.0] for text in texts]
+
+    model = FakeModel()
+    articles = [
+        {"id": "climate", "title": "Drought and climate", "brief_summary": "Dry crops"},
+        {"id": "sports", "title": "Football final", "brief_summary": "Teams split points"},
+    ]
+    ranked = rank_with_embedding_model("climate drought", articles, model, limit=2)
+
+    assert ranked[0][0]["id"] == "climate"
+    assert ranked[0][1] > ranked[1][1]
+    assert model.inputs[0][0] == ["query: climate drought"]
+    assert model.inputs[1][0][0].startswith("passage: ")
+    assert all(call[1]["normalize_embeddings"] is True for call in model.inputs)
+    assert rank_with_embedding_model("", articles, model) == []

@@ -9,10 +9,22 @@ import gradio as gr
 
 from newsintel.analysis import analyze_articles
 from newsintel.demo_data import synthetic_articles
-from newsintel.discovery import NewsSearch, topic_trends
+from newsintel.discovery import NewsSearch, rank_with_embedding_model, topic_trends
 from newsintel.pipeline import run_intelligence
 from newsintel.rss import canonicalize_url, load_sources
 from newsintel.storage import load_cache, save_cache
+
+try:
+    import spaces
+except ImportError:
+    class _SpacesCompat:
+        @staticmethod
+        def GPU(*, duration: int = 60):
+            def decorate(function):
+                return function
+            return decorate
+
+    spaces = _SpacesCompat()
 
 ROOT = Path(__file__).resolve().parent
 FEEDS_PATH = ROOT / "config" / "feeds.json"
@@ -26,6 +38,31 @@ def demo_mode_enabled(environ: dict[str, str] | None = None) -> bool:
 
 
 DEMO_MODE = demo_mode_enabled()
+SPACE_MODE = bool(os.getenv("SPACE_ID"))
+SPACE_SEARCH_MODEL_ID = "intfloat/multilingual-e5-small"
+SPACE_SEARCH_MODEL_REVISION = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
+SPACE_SEARCH_MODEL = None
+SPACE_SEARCH_MODEL_ERROR = ""
+
+
+def _load_space_search_model():
+    from sentence_transformers import SentenceTransformer
+
+    return SentenceTransformer(
+        SPACE_SEARCH_MODEL_ID,
+        revision=SPACE_SEARCH_MODEL_REVISION,
+        device="cuda",
+    )
+
+
+if SPACE_MODE:
+    try:
+        # ZeroGPU requires the model on CUDA at module startup; the decorated
+        # callback acquires real GPU time only when a visitor explicitly clicks.
+        SPACE_SEARCH_MODEL = _load_space_search_model()
+    except Exception as exc:  # noqa: BLE001 - preserve the synthetic app if optional model setup fails.
+        SPACE_SEARCH_MODEL_ERROR = type(exc).__name__
+        print("ZeroGPU semantic model unavailable: " + SPACE_SEARCH_MODEL_ERROR)
 
 
 def _matches(article: dict[str, Any], topic: str, mood: str, query: str, ethiopia_only: bool) -> bool:
@@ -135,6 +172,33 @@ def apply_filters(articles: list[dict[str, Any]], topic: str, mood: str,
     return render_cards(filtered), note
 
 
+@spaces.GPU(duration=30)
+def gpu_semantic_search(articles: list[dict[str, Any]], topic: str, mood: str,
+                        query: str, ethiopia_only: bool) -> tuple[str, str]:
+    """Explicit ZeroGPU action: rank only the currently loaded synthetic examples."""
+    if SPACE_SEARCH_MODEL is None:
+        reason = SPACE_SEARCH_MODEL_ERROR or "model not loaded"
+        return render_cards([]), f"Multilingual GPU search is unavailable ({reason})."
+    if not query.strip():
+        return render_cards([]), "Enter a search phrase before running multilingual GPU search."
+    candidates = [
+        article for article in (articles or [])
+        if _matches(article, topic, mood, "", ethiopia_only)
+    ]
+    try:
+        ranked = rank_with_embedding_model(query, candidates, SPACE_SEARCH_MODEL, limit=60)
+    except Exception as exc:  # noqa: BLE001 - keep the rest of the dashboard usable on inference failure.
+        return render_cards([]), f"GPU semantic search failed ({type(exc).__name__}); basic filters remain available."
+    results = [article for article, _score in ranked]
+    top_score = f" Top cosine score: {ranked[0][1]:.3f}." if ranked else ""
+    note = (
+        f"Multilingual E5 semantic search on ZeroGPU ranked {len(results)} of "
+        f"{len(candidates)} filtered synthetic examples.{top_score} "
+        "Amharic relevance has not been benchmarked."
+    )
+    return render_cards(results), note
+
+
 CSS = """
 .gradio-container {max-width: 1120px !important; margin: auto !important;}
 .story {border: 1px solid #dce3ed; border-radius: 14px; padding: 18px 20px; margin: 14px 0; background: white;}
@@ -171,6 +235,27 @@ with gr.Blocks(title="AI News Intelligence", theme=gr.themes.Soft(), css=CSS) as
     refresh_button.click(refresh_news, outputs=[articles_state, stories, status, topic_pulse])
     for component in (topic_filter, sentiment_filter, search_box, search_mode, ethiopia_filter):
         component.change(apply_filters, inputs=[articles_state, topic_filter, sentiment_filter, search_box, ethiopia_filter, search_mode], outputs=[stories, status])
+    if SPACE_MODE:
+        if SPACE_SEARCH_MODEL is not None:
+            gr.Markdown(
+                "**Multilingual GPU search:** click the button to rank fictional examples "
+                "with multilingual E5 on ZeroGPU. GPU time is requested only for this action; "
+                "Amharic relevance is not benchmarked."
+            )
+        else:
+            gr.Markdown(
+                "**Multilingual GPU search unavailable:** the embedding model did not load; "
+                "synthetic examples and ordinary filters remain available."
+            )
+        gpu_search_button = gr.Button(
+            "Rank synthetic examples with multilingual E5 (GPU)",
+            visible=SPACE_SEARCH_MODEL is not None,
+        )
+        gpu_search_button.click(
+            gpu_semantic_search,
+            inputs=[articles_state, topic_filter, sentiment_filter, search_box, ethiopia_filter],
+            outputs=[stories, status],
+        )
     demo.load(refresh_news, outputs=[articles_state, stories, status, topic_pulse])
 
 if __name__ == "__main__":

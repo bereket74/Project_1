@@ -18,3 +18,9 @@ This starter stores only RSS-provided title, URL, source, timestamp, feed catego
 ## Refresh and removal
 
 Feed URLs live in `config/feeds.json`. Remove or amend a source there if it becomes unavailable or its policy changes. Runtime cache files are local under `data/`, are not committed, and can be cleared by deleting that directory.
+
+## Semantic search model and GPU runtime
+
+The Space's explicit multilingual search button uses [`intfloat/multilingual-e5-small`](https://huggingface.co/intfloat/multilingual-e5-small), pinned to model revision `614241f622f53c4eeff9890bdc4f31cfecc418b3`. The model card lists an MIT license and support for 100 languages, requires `query: ` and `passage: ` prefixes for retrieval, and warns that low-resource languages may see degraded performance. Its performance for Amharic is not benchmarked in this project.
+
+The [ZeroGPU documentation](https://huggingface.co/docs/hub/spaces-zerogpu) requires GPU-dependent functions to use `@spaces.GPU`; models should be placed on CUDA at module startup, and a short duration improves queue priority. The app uses the default `large` size and a 30-second cap. GPU inference is available only through the explicit button; page load, feed safety, and ordinary filters remain CPU-only. ZeroGPU calls may consume the caller's included daily quota.

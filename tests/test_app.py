@@ -65,3 +65,36 @@ def test_demo_mode_uses_only_fictional_examples_without_live_feed_calls(monkeypa
     assert "no live feeds" in status.lower()
     assert "href=" not in cards
     assert "descriptive, not forecasts" in app.render_trends(articles)
+
+
+def test_zero_gpu_search_ranks_loaded_synthetic_examples_without_feed_calls(monkeypatch):
+    class FakeModel:
+        def __init__(self):
+            self.inputs = []
+
+        def encode(self, texts, **kwargs):
+            self.inputs.append(list(texts))
+            if texts[0].startswith("query:"):
+                return [[1.0, 0.0]]
+            return [
+                [1.0, 0.0] if "drought-resistant wheat" in text.lower() else [0.0, 1.0]
+                for text in texts
+            ]
+
+    def fail_if_live(*_args, **_kwargs):
+        raise AssertionError("GPU search must only rank loaded examples; it must not fetch feeds")
+
+    monkeypatch.setattr(app, "SPACE_SEARCH_MODEL", FakeModel())
+    monkeypatch.setattr(app, "run_intelligence", fail_if_live)
+    articles = app.analyze_articles(app.synthetic_articles())
+    markup, status = app.gpu_semantic_search(
+        articles, "All topics", "All sentiment", "drought-resistant wheat", False
+    )
+
+    assert "Synthetic example: Farmers test drought-resistant wheat" in markup
+    assert "Synthetic example: Researchers test water-saving irrigation" in markup
+    assert "Multilingual E5 semantic search on ZeroGPU" in status
+    assert "Amharic relevance has not been benchmarked" in status
+    assert "href=" not in markup
+    assert app.SPACE_SEARCH_MODEL.inputs[0] == ["query: drought-resistant wheat"]
+    assert app.SPACE_SEARCH_MODEL.inputs[1][0].startswith("passage: ")

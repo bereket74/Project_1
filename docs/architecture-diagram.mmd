@@ -2,9 +2,16 @@ flowchart TB
   feeds[Curated public RSS / Atom feeds] --> collector[Sequential fetch with timeout and size cap]
   collector --> normalize[Normalize, attribute, and deduplicate]
   normalize --> cache[(Local JSON cache: metadata only)]
-  demo[On Hugging Face Spaces: fictional examples only; no RSS requests] --> analysis
-  normalize --> analysis[Transparent analysis: keyword topics, VADER English sentiment, optional spaCy NER, extractive briefs, TF-IDF story groups]
-  analysis --> records[Analyzed story records]
-  records --> discovery[Similarity-ranked search: TF-IDF by default, optional embeddings; adjacent-window topic pulse]
+  demo[Space demo: fictional examples only; no RSS requests] --> analysis
+  normalize --> analysis[Transparent analysis: keyword topics, VADER English sentiment, optional spaCy NER, extractive briefs, TF-IDF groups]
+  analysis --> records[Analyzed story state; fictional records in the Space]
+  records --> discovery[CPU filters, TF-IDF search, adjacent-window topic pulse]
   discovery --> dashboard[Gradio dashboard with source-linked cards]
   records --> cli[CLI JSON / CSV export]
+
+  subgraph ZeroGPU_search[ZeroGPU semantic search — explicit button only]
+    query[User query] --> gpu_search[@spaces.GPU callback, 30-second cap]
+    model[Multilingual E5 model loaded on CUDA at startup] --> gpu_search
+  end
+  records --> gpu_search
+  gpu_search --> dashboard

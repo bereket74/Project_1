@@ -30,6 +30,7 @@ News readers often have to scan several sources to notice recurring coverage and
 - Related-story groups using TF-IDF word/bigram cosine similarity.
 - Gradio filters for topic, sentiment, exact-text search, and Ethiopia-focused sources; source attribution and original-story links.
 - Similarity-ranked search using TF-IDF by default, with optional multilingual sentence embeddings.
+- On Hugging Face Spaces, an explicit button runs pinned multilingual E5 semantic search on ZeroGPU, using only fictional examples; it requests GPU time only when clicked and is capped at 30 seconds. Amharic relevance is not benchmarked.
 - A descriptive topic pulse comparing currently returned feed items across adjacent seven-day windows; source feed histories are incomplete, so it is not comprehensive coverage or a forecast.
 - Local JSON cache, CLI JSON/CSV export, and offline unit tests.
 - Automatic synthetic-data mode on Hugging Face Spaces; it avoids live RSS requests and labels fictional examples explicitly.
@@ -43,9 +44,10 @@ Python 3.10+ is supported. From the repository root:
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-python -m pip install -r requirements.txt
-python -m pip install -e .
+python -m pip install -e ".[test]"
 ```
+
+This local install keeps the Space-only PyTorch/ZeroGPU model stack out of the default environment. Hugging Face Spaces installs the pinned runtime dependencies in [`requirements.txt`](requirements.txt).
 
 Launch the interface locally:
 
@@ -76,7 +78,7 @@ python -m pip install '.[ner]'
 python -m spacy download en_core_web_sm
 ```
 
-For optional multilingual embedding search, install `python -m pip install -e '.[semantic]'` and set `NEWSINTEL_SEARCH_MODEL` to a compatible sentence-transformers model ID (for example, `intfloat/multilingual-e5-small`). The model is downloaded on first similarity search. If it is unavailable, the application falls back to TF-IDF and reports the active backend; the default installation makes no embedding or multilingual-accuracy claim.
+For optional multilingual embedding search during local development, install `python -m pip install -e '.[semantic]'` and set `NEWSINTEL_SEARCH_MODEL` to a compatible sentence-transformers model ID. The model is downloaded on first similarity search. If it is unavailable, the application falls back to TF-IDF and reports the active backend. The public Space uses a separate pinned E5 model on ZeroGPU; see [`docs/sources.md`](docs/sources.md). E5's model card cautions that low-resource languages may see degraded performance, and this project has no Amharic search benchmark.
 
 If that model is absent, the app returns capitalization-based *candidate* names with the fallback method disclosed in each record. The fallback is not a substitute for validated NER.
 
@@ -108,7 +110,7 @@ docs/                  Architecture and source notes
 
 ## Hugging Face / deployment
 
-The [public synthetic-only Space source](https://huggingface.co/spaces/klohdfhk/ai-news-intelligence) contains code and fictional examples only—no publisher stories or feed dataset were uploaded. Its runtime is currently unavailable: Hugging Face ZeroGPU reports `No @spaces.GPU function detected during startup`, while this prototype is CPU-only. Hugging Face's [Spaces overview](https://huggingface.co/docs/hub/spaces-overview) says compute-backed Gradio Spaces on CPU Basic require a paid plan for personal accounts; free personal ZeroGPU hosting is subject to [eligibility and ZeroGPU requirements](https://huggingface.co/docs/hub/spaces-zerogpu). No GPU workaround or paid plan has been enabled. Run the app locally using the Quick start instructions. Live RSS excerpts remain local-only pending clearer reuse permission.
+The [public synthetic-only Space](https://huggingface.co/spaces/klohdfhk/ai-news-intelligence) contains code and fictional examples only—no publisher stories or feed dataset are uploaded. Its earlier runtime failed because the app had no `@spaces.GPU` handler. The current source adds a genuine multilingual E5 search callback on ZeroGPU; a public rebuild and live inference check are pending, so do not treat the hosted runtime as verified yet. GPU time is requested only by the explicit search button, with the default hardware size and a 30-second cap. Free personal ZeroGPU hosting depends on [account eligibility and daily quotas](https://huggingface.co/docs/hub/spaces-zerogpu); no paid CPU plan or larger GPU size has been enabled. The Space remains synthetic-only and never fetches live RSS. Live excerpts stay local-only pending clearer reuse permission.
 
 ## License
 

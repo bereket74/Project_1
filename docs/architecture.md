@@ -23,7 +23,7 @@ The system does not crawl article pages, send content to a third-party LLM, or t
 - **Sentiment:** VADER lexicon scoring for English. Amharic and text without Latin-script evidence are labeled unsupported rather than assigned an unvalidated score.
 - **Entities:** optional `en_core_web_sm` spaCy NER. If the model is not installed, a clearly labeled capitalization heuristic proposes candidate names. Neither path is validated for Amharic.
 - **Related stories:** TF-IDF word/bigram vectors with cosine similarity and a connected-components grouping threshold. This is a lightweight lexical baseline, not semantic embedding search.
-- **Search:** exact-text matching or ranked TF-IDF similarity by default. An optional sentence-transformers model can provide dense multilingual embeddings; the UI reports the active backend and falls back to TF-IDF if model loading fails.
+- **Search:** exact-text matching or ranked TF-IDF similarity by default. On the Space, a separate button calls a 30-second `@spaces.GPU` function that ranks the loaded fictional examples with a pinned `intfloat/multilingual-e5-small` model placed on CUDA at startup. It uses the E5 `query:` and `passage:` prefixes. Amharic relevance is not benchmarked; low-resource language quality may be lower.
 - **Topic pulse:** compares current-window topic counts with the preceding window using only feed items presently available to the app. Feed histories are incomplete, so the pulse is not comprehensive coverage, a forecast, or a measure of article truth.
 - **Brief summaries:** at most two sentences selected from the publisher-provided RSS description; title-only if the feed provides no description. No generative model is used.
 

@@ -67,6 +67,29 @@ class NewsSearch:
             return None
 
 
+def rank_with_embedding_model(query: str, articles: list[dict[str, Any]], model: Any,
+                              limit: int = 60) -> list[tuple[dict[str, Any], float]]:
+    """Rank documents with a preloaded SentenceTransformer model.
+
+    E5 retrieval models require task prefixes even for non-English text. This helper
+    receives the model so ZeroGPU can keep it loaded on CUDA at module startup.
+    """
+    if not query.strip() or not articles:
+        return []
+    query_vectors = model.encode(
+        ["query: " + query], normalize_embeddings=True, convert_to_numpy=True,
+        show_progress_bar=False,
+    )
+    passages = ["passage: " + _document_text(article) for article in articles]
+    document_vectors = model.encode(
+        passages, normalize_embeddings=True, convert_to_numpy=True,
+        show_progress_bar=False,
+    )
+    scores = cosine_similarity(query_vectors, document_vectors)[0]
+    ranked = sorted(zip(articles, scores), key=lambda item: float(item[1]), reverse=True)
+    return [(article, float(score)) for article, score in ranked[:max(1, limit)]]
+
+
 def topic_trends(articles: list[dict[str, Any]], window_days: int = 7,
                  now: datetime | None = None) -> list[dict[str, Any]]:
     """Compare topic volume in two adjacent windows; counts are descriptive, not forecasts."""
