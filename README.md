@@ -32,6 +32,7 @@ News readers often have to scan several sources to notice recurring coverage and
 - Similarity-ranked search using TF-IDF by default, with optional multilingual sentence embeddings.
 - A descriptive topic pulse comparing currently returned feed items across adjacent seven-day windows; source feed histories are incomplete, so it is not comprehensive coverage or a forecast.
 - Local JSON cache, CLI JSON/CSV export, and offline unit tests.
+- Automatic synthetic-data mode on Hugging Face Spaces; it avoids live RSS requests and labels fictional examples explicitly.
 
 ![AI News Intelligence architecture](docs/architecture-diagram.png)
 
@@ -52,7 +53,7 @@ Launch the interface locally:
 python app.py
 ```
 
-Open `http://127.0.0.1:7860`. The app refreshes configured feeds at page load. It falls back to the last local cache when the network is unavailable. Do not enable public sharing by default; feeds can be refreshed from the UI.
+Open `http://127.0.0.1:7860`. Local development uses the configured live feeds and falls back to the last cache when the network is unavailable. For a fictional, no-network preview, launch with `NEWSINTEL_DEMO_MODE=1 python app.py`. A Hugging Face Space automatically switches to synthetic examples when `SPACE_ID` is present; it will not fetch live feeds or show publisher excerpts.
 
 Run the pipeline without a browser:
 
@@ -84,8 +85,6 @@ If that model is absent, the app returns capitalization-based *candidate* names 
 This first version prioritizes honest, reproducible baselines over unsupported benchmark claims. Topic labeling uses keyword rules; sentiment uses VADER's English lexicon; related-story clustering uses lexical TF-IDF. Search can use TF-IDF by default or optional dense sentence embeddings when configured. These methods can miss context, irony, uncommon topics, and paraphrases. Headlines and short feed descriptions are particularly weak evidence for sentiment or entities. Trend counts compare adjacent windows only within the currently returned, incomplete feed sample; they are neither comprehensive nor predictive.
 
 No labeled evaluation corpus is included, so there are **no precision/recall/F1 or clustering-quality claims**. The tests cover data normalization, unsafe URLs, supported/unsupported-language behavior, output fields, grouping on a synthetic unit-test fixture, and cache schema behavior. The fixture is synthetic test data, not a news dataset. See [`docs/architecture.md`](docs/architecture.md) and [`docs/sources.md`](docs/sources.md).
-
-![Architecture diagram showing the RSS-to-analysis pipeline and Gradio dashboard](docs/architecture.png)
 
 The verified test count, live-feed smoke check, and local dashboard check are recorded in [`docs/evaluation.md`](docs/evaluation.md); live counts are point-in-time operational evidence, not model benchmarks.
 

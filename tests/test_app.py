@@ -42,3 +42,26 @@ def test_similarity_mode_ranks_relevant_stories(monkeypatch):
     assert "Ethiopia drought and climate update" in markup
     assert "Football final" not in markup
     assert "TF-IDF lexical similarity" in status
+
+
+
+def test_demo_mode_uses_only_fictional_examples_without_live_feed_calls(monkeypatch):
+    assert app.demo_mode_enabled({"SPACE_ID": "owner/news-demo"})
+    assert app.demo_mode_enabled({"NEWSINTEL_DEMO_MODE": "true"})
+    assert not app.demo_mode_enabled({})
+    monkeypatch.setattr(app, "DEMO_MODE", True)
+
+    def fail_if_live(*_args, **_kwargs):
+        raise AssertionError("synthetic demo must not call live-feed functions")
+
+    monkeypatch.setattr(app, "load_sources", fail_if_live)
+    monkeypatch.setattr(app, "run_intelligence", fail_if_live)
+    articles, cards, status, _trends = app.refresh_news()
+    assert len(articles) == 7
+    assert all(article["id"].startswith("synthetic-") for article in articles)
+    assert all(not article["url"] for article in articles)
+    assert all(article["attribution"] == "Synthetic demo data — not a real publisher" for article in articles)
+    assert articles[-1]["sentiment"] == "unsupported"
+    assert "no live feeds" in status.lower()
+    assert "href=" not in cards
+    assert "descriptive, not forecasts" in app.render_trends(articles)

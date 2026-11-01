@@ -7,6 +7,8 @@ from typing import Any
 
 import gradio as gr
 
+from newsintel.analysis import analyze_articles
+from newsintel.demo_data import synthetic_articles
 from newsintel.discovery import NewsSearch, topic_trends
 from newsintel.pipeline import run_intelligence
 from newsintel.rss import canonicalize_url, load_sources
@@ -16,6 +18,14 @@ ROOT = Path(__file__).resolve().parent
 FEEDS_PATH = ROOT / "config" / "feeds.json"
 CACHE_PATH = ROOT / "data" / "latest_articles.json"
 SEARCH = NewsSearch()
+
+
+def demo_mode_enabled(environ: dict[str, str] | None = None) -> bool:
+    env = os.environ if environ is None else environ
+    return bool(env.get("SPACE_ID")) or env.get("NEWSINTEL_DEMO_MODE", "").lower() in {"1", "true", "yes"}
+
+
+DEMO_MODE = demo_mode_enabled()
 
 
 def _matches(article: dict[str, Any], topic: str, mood: str, query: str, ethiopia_only: bool) -> bool:
@@ -43,7 +53,9 @@ def render_cards(articles: list[dict[str, Any]]) -> str:
     cards: list[str] = []
     for article in articles[:60]:
         title = html.escape(str(article.get("title", "Untitled")))
-        url = html.escape(canonicalize_url(str(article.get("url", ""))) or "#", quote=True)
+        canonical_url = canonicalize_url(str(article.get("url", "")))
+        title_markup = (f'<a href="{html.escape(canonical_url, quote=True)}" target="_blank" rel="noopener noreferrer">{title}</a>'
+                        if canonical_url else title)
         source = html.escape(str(article.get("attribution", article.get("source", "Source"))))
         published = html.escape(str(article.get("published", "Date unavailable")))
         summary = html.escape(str(article.get("brief_summary", article.get("summary", ""))))
@@ -58,7 +70,7 @@ def render_cards(articles: list[dict[str, Any]]) -> str:
         cards.append(
             '<article class="story">'
             f'<div class="meta"><span>{source}</span><span>{published}</span></div>'
-            f'<h3><a href="{url}" target="_blank" rel="noopener noreferrer">{title}</a></h3>'
+            f'<h3>{title_markup}</h3>'
             f'<p>{summary}</p>'
             f'<div class="tags"><span class="tag">{topic}</span><span class="tag sentiment">{mood}</span>{group}</div>'
             f'{entity_line}'
@@ -81,6 +93,10 @@ def render_trends(articles: list[dict[str, Any]]) -> str:
 
 
 def refresh_news() -> tuple[list[dict[str, Any]], str, str, str]:
+    if DEMO_MODE:
+        articles = analyze_articles(synthetic_articles())
+        note = "Synthetic demonstration data only — no live feeds or publisher excerpts are fetched."
+        return articles, render_cards(articles), note, render_trends(articles)
     try:
         sources = load_sources(FEEDS_PATH)
         articles, errors = run_intelligence(sources, timeout=12.0, per_feed_limit=80)
@@ -135,10 +151,14 @@ CSS = """
 """
 
 with gr.Blocks(title="AI News Intelligence", theme=gr.themes.Soft(), css=CSS) as demo:
-    gr.Markdown("# AI News Intelligence\nA source-linked news desk built on public RSS feeds. Analyses are lightweight and inspectable; Amharic sentiment/NER are intentionally marked unsupported until validated.")
+    intro = "# AI News Intelligence\n"
+    intro += ("**Synthetic demo mode:** sample stories are fictional and no live RSS content is fetched.\n\n" if DEMO_MODE
+              else "A source-linked news desk built on public RSS feeds.\n\n")
+    intro += "Analyses are lightweight and inspectable; Amharic sentiment/NER are intentionally marked unsupported until validated."
+    gr.Markdown(intro)
     with gr.Row():
-        refresh_button = gr.Button("Refresh public feeds", variant="primary")
-        status = gr.Markdown("Loading news feeds…")
+        refresh_button = gr.Button("Refresh synthetic examples" if DEMO_MODE else "Refresh public feeds", variant="primary")
+        status = gr.Markdown("Synthetic demo data ready; no live feeds will be fetched." if DEMO_MODE else "Loading news feeds…")
     articles_state = gr.State([])
     with gr.Row():
         topic_filter = gr.Dropdown(["All topics", "politics", "business", "technology", "health", "climate", "science", "sports", "conflict", "world", "general"], value="All topics", label="Topic")

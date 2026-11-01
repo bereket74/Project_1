@@ -1,33 +1,15 @@
-# Evaluation and smoke-check notes
+# Evaluation and verification
 
-## Offline tests
+## What works
 
-The final full test run completed with **15 passing tests** on Python 3.12.3 using the project virtual environment. Coverage includes feed parsing and canonicalization, unsupported schemes, English topic/sentiment baselines, Amharic guardrails, bounded extractive briefs, TF-IDF duplicate grouping, empty-vocabulary handling, local cache schema, UI filtering and HTML/URL escaping, similarity ranking, and trend-window arithmetic.
+- **Offline tests:** 16 tests passed on Python 3.12.3. Ruff and `compileall` passed, and `pip wheel --no-deps` built the project wheel.
+- **Live feed check:** on 2026-11-01, the configured four RSS feeds returned 93 items with zero feed warnings: BBC News — World (25), BBC News — Amharic (33), The Reporter Ethiopia (10), and Al Jazeera — All (25).
+- **Synthetic Space path:** with `SPACE_ID` set, the app returned seven fictional examples, omitted story links, used the “Refresh synthetic examples” control, and did not call the live RSS pipeline. The local Space-mode page returned HTTP 200. No public Hugging Face Space has been published.
 
-The duplicate-story test uses a clearly synthetic fixture. It verifies code behavior only; it is not an estimate of real-world precision or recall.
+The live snapshot contained 33 unclassified items from the Amharic feed; sentiment was explicitly unsupported for those items. Among the other 60 items, the VADER labels were 39 negative, 17 positive, and 4 neutral. The TF-IDF grouper found zero clusters in the live snapshot. These are operational counts, not measures of model quality.
 
-## Live feed smoke check
+## What is not measured
 
-On 2026-11-01, the collector fetched and analyzed **93 items** using a per-feed limit of 35. All four configured endpoints returned usable items with **0 feed warnings** in that run:
+There is no licensed, labeled benchmark in this project. Topic, sentiment, entity extraction, grouping, search, and trend quality metrics are therefore not reported. The TF-IDF clustering test uses synthetic near-duplicates and does not establish real-world grouping accuracy. Trend counts use only the feed items presently returned; they are descriptive, not comprehensive or predictive.
 
-| Source | Items |
-|---|---:|
-| BBC News — World | 25 |
-| BBC News — Amharic | 33 |
-| The Reporter Ethiopia | 10 |
-| Al Jazeera — All | 25 |
-
-Analysis output in that sample: 21 politics, 6 conflict, 1 business, 2 technology, 1 sports, 1 climate, 7 world, 21 general, and 33 unclassified items (the Amharic feed); 39 negative, 17 positive, 4 neutral, and 33 unsupported sentiment labels. These are descriptive counts from one live snapshot, not accuracy measurements. Amharic sentiment is explicitly unsupported, and English VADER output is sensitive to short headlines and feed snippets.
-
-The lexical TF-IDF grouper found **no related-story clusters** in this 93-item snapshot at its configured threshold. The offline synthetic test confirms it can group near-duplicate items, but this live result shows that useful real-world cross-publisher grouping has not yet been demonstrated. The next improvement is a manually reviewed, licensed duplicate-story set followed by precision/recall evaluation before changing the threshold or making quality claims. The local Gradio page also returned HTTP 200; this checks startup and page serving, not deployment or every interaction.
-
-## What is not evaluated yet
-
-There is no labeled, licensed dataset in this starter, so topic, sentiment, NER, clustering, search, and trend-quality metrics are intentionally not reported. In particular, the keyword topic baseline, VADER English sentiment, capitalization fallback, TF-IDF retrieval, and Amharic unsupported label are not interchangeable with validated language models. Trend changes are descriptive, not forecasts. The output is for exploration, not editorial, public-safety, or financial decisions.
-
-
-## Interactive callback
-
-A fresh Gradio client invocation of the UI's `refresh_news` callback returned rendered story cards and a success message for **93 items across the four configured feeds**. This is a separate, larger fetch than the 46-item CLI snapshot above; feed contents and counts naturally change. The UI endpoint health check also returned HTTP 200 with the expected application title. Neither check evaluates model accuracy.
-
-The topic pulse uses only currently returned feed items; it does not maintain a complete historical archive. Treat window comparisons as a small, potentially incomplete feed sample.
+Live excerpts remain for local exploration only. The synthetic Space mode avoids redistributing those excerpts, but a public Space has not yet been created. Publisher-use notes and links are in [`sources.md`](sources.md).

@@ -1,26 +1,16 @@
 # Architecture
 
 ```mermaid
-flowchart LR
-  F[Curated public RSS / Atom feeds] --> C[Sequential fetch with timeout and size cap]
-  C --> N[Normalize, attribute, deduplicate]
-  N --> S[(Local JSON cache: feed metadata only)]
-  N --> T[Keyword topic baseline]
-  N --> V[VADER English sentiment]
-  N --> E[spaCy English NER if model installed; otherwise disclosed heuristic]
-  N --> B[Extractive brief from feed summary]
-  N --> X[TF-IDF cosine similarity grouping]
-  P --> Q[TF-IDF search; optional sentence embeddings]
-  P --> R[Adjacent-window topic counts]
-  T --> P[Analyzed story records]
-  V --> P
-  E --> P
-  B --> P
-  X --> P
-  P --> G[Gradio filters and source-linked story cards]
-  Q --> G
-  R --> G
-  P --> D[CLI JSON / CSV export]
+flowchart TB
+  feeds[Curated public RSS / Atom feeds] --> collector[Sequential fetch with timeout and size cap]
+  collector --> normalize[Normalize, attribute, and deduplicate]
+  normalize --> cache[(Local JSON cache: metadata only)]
+  demo[On Hugging Face Spaces: fictional examples only; no RSS requests] --> analysis
+  normalize --> analysis[Transparent analysis: keyword topics, VADER English sentiment, optional spaCy NER, extractive briefs, TF-IDF story groups]
+  analysis --> records[Analyzed story records]
+  records --> discovery[Similarity-ranked search: TF-IDF by default, optional embeddings; adjacent-window topic pulse]
+  discovery --> dashboard[Gradio dashboard with source-linked cards]
+  records --> cli[CLI JSON / CSV export]
 ```
 
 ![AI News Intelligence architecture diagram](architecture-diagram.png)

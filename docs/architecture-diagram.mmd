@@ -1,19 +1,10 @@
-flowchart LR
-    F["Public RSS / Atom feeds<br/>BBC World + Amharic<br/>The Reporter Ethiopia<br/>Al Jazeera"] --> C["Sequential fetch<br/>12s timeout • 5MB cap"]
-    C --> N["Normalize + deduplicate<br/>Attribution + canonical URL"]
-    N --> S[("Local JSON cache<br/>RSS metadata only")]
-    N --> T["Keyword topic baseline<br/>English terms"]
-    N --> V["VADER sentiment<br/>English only"]
-    N --> E["spaCy English NER<br/>or named-phrase fallback"]
-    N --> B["Extractive brief<br/>RSS description only"]
-    N --> X["TF-IDF cosine clustering<br/>Related coverage groups"]
-    T --> P["Analyzed story records"]
-    V --> P
-    E --> P
-    B --> P
-    X --> P
-    P --> Q["Ranked search<br/>TF-IDF default; optional embeddings"]
-    P --> R["Topic pulse<br/>Incomplete feed-window counts"]
-    P --> D["CLI JSON / CSV"]
-    Q --> G["Gradio news desk<br/>Filters + source-linked cards"]
-    R --> G
+flowchart TB
+  feeds[Curated public RSS / Atom feeds] --> collector[Sequential fetch with timeout and size cap]
+  collector --> normalize[Normalize, attribute, and deduplicate]
+  normalize --> cache[(Local JSON cache: metadata only)]
+  demo[On Hugging Face Spaces: fictional examples only; no RSS requests] --> analysis
+  normalize --> analysis[Transparent analysis: keyword topics, VADER English sentiment, optional spaCy NER, extractive briefs, TF-IDF story groups]
+  analysis --> records[Analyzed story records]
+  records --> discovery[Similarity-ranked search: TF-IDF by default, optional embeddings; adjacent-window topic pulse]
+  discovery --> dashboard[Gradio dashboard with source-linked cards]
+  records --> cli[CLI JSON / CSV export]
