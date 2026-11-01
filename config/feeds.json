@@ -1,0 +1,34 @@
+[
+  {
+    "name": "BBC News — World",
+    "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "homepage": "https://www.bbc.com/news",
+    "language": "en",
+    "region": "global",
+    "attribution": "BBC News"
+  },
+  {
+    "name": "BBC News — Amharic",
+    "url": "https://feeds.bbci.co.uk/amharic/rss.xml",
+    "homepage": "https://www.bbc.com/amharic",
+    "language": "am",
+    "region": "ethiopia",
+    "attribution": "BBC News Amharic"
+  },
+  {
+    "name": "The Reporter Ethiopia",
+    "url": "https://www.thereporterethiopia.com/feed/",
+    "homepage": "https://www.thereporterethiopia.com/",
+    "language": "en",
+    "region": "ethiopia",
+    "attribution": "The Reporter Ethiopia"
+  },
+  {
+    "name": "Al Jazeera — All",
+    "url": "https://www.aljazeera.com/xml/rss/all.xml",
+    "homepage": "https://www.aljazeera.com/",
+    "language": "en",
+    "region": "global",
+    "attribution": "Al Jazeera"
+  }
+]
