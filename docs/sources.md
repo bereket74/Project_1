@@ -9,9 +9,11 @@ The application reads only the public RSS/Atom endpoints below. It does not craw
 | The Reporter Ethiopia | [RSS](https://www.thereporterethiopia.com/feed/) | [The Reporter Ethiopia](https://www.thereporterethiopia.com/), Ethiopia-focused English coverage |
 | Al Jazeera | [RSS](https://www.aljazeera.com/xml/rss/all.xml) | [Al Jazeera](https://www.aljazeera.com/), global English coverage |
 
-BBC's [news feed guidance](https://www.bbc.co.uk/news/10628494) asks sites displaying BBC feed content to use proper attribution and links to its [RSS terms](https://www.bbc.co.uk/terms/additional_rss.shtml). Public feed availability does not mean that article text or summaries are freely licensed for republication. Before public hosting, review each publisher's current terms, retain attribution, link users to the original story, and remove a feed on request or if its terms prohibit the use.
+The BBC's [feed guidance](https://www.bbc.com/news/help-11144227) says the feeds are available for personal and non-commercial use and specifies BBC News/website attribution when feed content appears. It links to [additional RSS terms](https://www.bbc.co.uk/terms/additional_rss.shtml). Al Jazeera's [terms and conditions](https://www.aljazeera.com/terms-and-conditions) describe its content as for personal, non-commercial use and restrict copying or distribution without express prior written permission. I did not find clear feed-reuse permission for The Reporter Ethiopia's RSS endpoint. These pages are guidance, not a legal determination of whether any particular portfolio demo is permitted.
 
-This starter stores only RSS-provided title, URL, source, timestamp, feed category and short description. No article-body scraping, private feed, login, or paywall bypass is used. The app makes requests sequentially, with a timeout and a 5 MB response cap.
+**Hosting decision:** the live-feed app is suitable for local exploration with attribution and links, but a public Space that redisplays these excerpts is not being launched until reuse rights are clearer. The repository contains only code and source URLs, not publisher stories or a feed dataset. A public demo can be reconsidered with licensed/open content or explicitly synthetic examples. This is a conservative project decision, not legal advice.
+
+This starter stores only RSS-provided title, URL, source, timestamp, feed category and short description locally. No article-body scraping, private feed, login, or paywall bypass is used. The app makes requests sequentially, with a timeout and a 5 MB response cap.
 
 ## Refresh and removal
 
