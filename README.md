@@ -1,6 +1,6 @@
 ---
 title: AI News Intelligence
-emoji: newspaper
+emoji: 📰
 colorFrom: blue
 colorTo: indigo
 sdk: gradio
@@ -108,7 +108,7 @@ docs/                  Architecture and source notes
 
 ## Hugging Face / deployment
 
-The root README includes Hugging Face Spaces metadata and the app runs locally as a lightweight Gradio demo. No trained model or dataset is published. **No public Space is currently deployed**: live RSS excerpts are kept out of a public demo pending clear reuse permission. A synthetic-data or explicitly licensed-data Space remains a possible next step. Deployment is not claimed until a Space is created and verified.
+The [public synthetic-only Space source](https://huggingface.co/spaces/klohdfhk/ai-news-intelligence) contains code and fictional examples only—no publisher stories or feed dataset were uploaded. Its runtime is currently unavailable: Hugging Face ZeroGPU reports `No @spaces.GPU function detected during startup`, while this prototype is CPU-only. Hugging Face's [Spaces overview](https://huggingface.co/docs/hub/spaces-overview) says compute-backed Gradio Spaces on CPU Basic require a paid plan for personal accounts; free personal ZeroGPU hosting is subject to [eligibility and ZeroGPU requirements](https://huggingface.co/docs/hub/spaces-zerogpu). No GPU workaround or paid plan has been enabled. Run the app locally using the Quick start instructions. Live RSS excerpts remain local-only pending clearer reuse permission.
 
 ## License
 
