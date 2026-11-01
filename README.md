@@ -33,6 +33,8 @@ News readers often have to scan several sources to notice recurring coverage and
 - A descriptive topic pulse comparing currently returned feed items across adjacent seven-day windows; source feed histories are incomplete, so it is not comprehensive coverage or a forecast.
 - Local JSON cache, CLI JSON/CSV export, and offline unit tests.
 
+![AI News Intelligence architecture](docs/architecture-diagram.png)
+
 ## Quick start
 
 Python 3.10+ is supported. From the repository root:
@@ -83,11 +85,13 @@ This first version prioritizes honest, reproducible baselines over unsupported b
 
 No labeled evaluation corpus is included, so there are **no precision/recall/F1 or clustering-quality claims**. The tests cover data normalization, unsafe URLs, supported/unsupported-language behavior, output fields, grouping on a synthetic unit-test fixture, and cache schema behavior. The fixture is synthetic test data, not a news dataset. See [`docs/architecture.md`](docs/architecture.md) and [`docs/sources.md`](docs/sources.md).
 
+![Architecture diagram showing the RSS-to-analysis pipeline and Gradio dashboard](docs/architecture.png)
+
 The verified test count, live-feed smoke check, and local dashboard check are recorded in [`docs/evaluation.md`](docs/evaluation.md); live counts are point-in-time operational evidence, not model benchmarks.
 
 ## Data rights and responsible use
 
-The tool reads public RSS/Atom endpoints only and stores feed metadata and short publisher-supplied descriptions locally. Feed availability does not grant a right to republish content. Attribution and links are retained; review current publisher terms before hosting the app publicly. Do not add article-body scraping, bypass access controls, or redistribute feed content without permission. Sources and relevant guidance are documented in [`docs/sources.md`](docs/sources.md).
+The tool reads public RSS/Atom endpoints only and stores feed metadata and short publisher-supplied descriptions locally. Feed availability does not grant a right to republish content. BBC guidance describes personal/non-commercial use; Al Jazeera restricts redistribution without permission; and The Reporter's applicable feed permissions remain unclear. For that reason, the public demo is not being deployed with live excerpts until rights are clearer. Attribution and links are retained. Do not add article-body scraping, bypass access controls, or redistribute feed content without permission. See [`docs/sources.md`](docs/sources.md).
 
 ## Configuration
 
@@ -105,7 +109,7 @@ docs/                  Architecture and source notes
 
 ## Hugging Face / deployment
 
-The root README contains Hugging Face Spaces metadata for a Gradio Space, and the app is designed to run as a lightweight Space. No trained model or dataset is published: this version uses established library baselines and publisher-owned RSS content. Public hosting should follow each publisher's latest terms. Deployment has not been claimed until a Space is actually created and verified.
+The root README includes Hugging Face Spaces metadata and the app runs locally as a lightweight Gradio demo. No trained model or dataset is published. **No public Space is currently deployed**: live RSS excerpts are kept out of a public demo pending clear reuse permission. A synthetic-data or explicitly licensed-data Space remains a possible next step. Deployment is not claimed until a Space is created and verified.
 
 ## License
 

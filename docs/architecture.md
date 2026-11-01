@@ -23,6 +23,8 @@ flowchart LR
   P --> D[CLI JSON / CSV export]
 ```
 
+![AI News Intelligence architecture diagram](architecture-diagram.png)
+
 The system does not crawl article pages, send content to a third-party LLM, or train a classifier on unlabelled headlines. Feed items are fetched sequentially to avoid unnecessary load. Each displayed item links to its publisher and retains attribution. The cache stores normalized feed fields only and is excluded from Git.
 
 ## Analysis components
